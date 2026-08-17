@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPF | European Professional Football</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+:root{
+  --black:#000000;
+  --near-black:#07090f;
+  --panel:#0e131c;
+  --gray:rgba(255,255,255,0.06);
+  --gray-border:rgba(255,255,255,0.14);
+  --white:#f5f7fa;
+  --white-dim:rgba(245,247,250,0.62);
+  --blue:#1855c4;
+  --blue-glow:#3b7bff;
+  --radius:16px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:'Rajdhani',sans-serif;overflow-x:hidden;min-height:100vh;}
+h1,h2,h3,.display{font-family:'Bebas Neue',sans-serif;letter-spacing:1px;}
+b,strong{color:var(--white);font-weight:700;}
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-track{background:var(--near-black);}
+::-webkit-scrollbar-thumb{background:var(--blue);border-radius:4px;}
+
+/* ============ BACKGROUND ============ */
+#bg-canvas{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;background:radial-gradient(ellipse at 50% -10%, #0a1a3a 0%, #05070d 45%, #000 100%);}
+#icon-field{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;overflow:hidden;pointer-events:none;}
+.float-icon{position:absolute;opacity:0.12;animation:drift linear infinite;}
+@keyframes drift{0%{transform:translate(0,0) rotate(0deg);}50%{transform:translate(30px,-40px) rotate(180deg);}100%{transform:translate(0,0) rotate(360deg);}}
+
+/* ============ LOADING SCREEN ============ */
+#loading-screen{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .9s var(--ease), visibility .9s var(--ease);}
+#loading-screen.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.load-logo-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;transition:transform .8s var(--ease), opacity .8s var(--ease);}
+.load-logo-wrap.finish-drop{transform:translateY(140px) scale(0.6);opacity:0;}
+.load-logo{width:120px;height:120px;animation:spinPulse 3.5s ease-in-out infinite;}
+.load-logo img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 22px rgba(59,123,255,0.55));}
+@keyframes spinPulse{0%{transform:rotate(0deg) scale(1);}50%{transform:rotate(8deg) scale(1.05);}100%{transform:rotate(0deg) scale(1);}}
+.load-abbr{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:6px;color:var(--white);text-shadow:0 0 14px rgba(59,123,255,0.6);}
+.load-bar-wrap{width:250px;height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;border:1px solid var(--gray-border);transition:opacity .5s;}
+.load-bar-wrap.finish{opacity:0;}
+.load-bar{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,#0c2a63,var(--blue-glow));box-shadow:0 0 12px rgba(59,123,255,0.6);transition:width 4.4s cubic-bezier(.4,0,.2,1);}
+
+/* ============ NAV ============ */
+header{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:14px 5%;background:rgba(0,0,0,0.55);backdrop-filter:blur(14px);border-bottom:1px solid var(--gray-border);opacity:0;transform:translateY(-20px);transition:opacity .7s var(--ease), transform .7s var(--ease);}
+header.show{opacity:1;transform:translateY(0);}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-brand img{height:32px;width:32px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(59,123,255,0.5));}
+.nav-brand .nav-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;}
+.nav-brand .nav-title span{color:var(--blue-glow);}
+.discord-btn{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:22px;
+  background:var(--blue);color:#fff;text-decoration:none;font-weight:700;font-size:13px;
+  box-shadow:0 4px 14px rgba(24,85,196,0.4);transition:transform .3s var(--ease), box-shadow .3s;
+}
+.discord-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(24,85,196,0.55);}
+
+/* ============ LAYOUT ============ */
+main{position:relative;z-index:2;padding-top:86px;}
+.container{max-width:1080px;margin:0 auto;padding:0 5%;}
+.reveal{opacity:0;transform:translateY(24px) scale(0.97);}
+body.site-revealed .reveal{animation:revealUp .85s var(--ease) forwards;}
+body.site-revealed .hero-logo.reveal{animation-delay:.05s;}
+body.site-revealed .hero h1.reveal{animation-delay:.2s;}
+body.site-revealed .hero p.tagline.reveal{animation-delay:.32s;}
+body.site-revealed .hero-buttons.reveal{animation-delay:.42s;}
+body.site-revealed .dash-grid.reveal{animation-delay:.55s;}
+body.site-revealed .dash-panel.reveal{animation-delay:.65s;}
+@keyframes revealUp{0%{opacity:0;transform:translateY(24px) scale(0.97);}60%{opacity:1;}100%{opacity:1;transform:translateY(0) scale(1);}}
+
+/* ============ HERO ============ */
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:48px 5% 18px;}
+.hero-logo{width:112px;height:112px;margin-bottom:16px;animation:floatLogo 5s ease-in-out infinite;}
+.hero-logo img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 22px rgba(59,123,255,0.4));}
+@keyframes floatLogo{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.hero h1{font-size:clamp(24px,5vw,40px);text-shadow:0 0 18px rgba(59,123,255,0.4);}
+.hero h1 .sep{color:var(--blue-glow);margin:0 10px;}
+.hero p.tagline{margin-top:12px;font-size:15px;color:var(--white-dim);max-width:520px;line-height:1.6;}
+.hero-buttons{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:26px;text-decoration:none;font-weight:700;font-size:13.5px;letter-spacing:0.4px;border:1px solid var(--gray-border);cursor:pointer;transition:transform .3s var(--ease), box-shadow .3s, background .3s;}
+.btn-primary{background:var(--blue);color:#fff;border:none;box-shadow:0 6px 20px rgba(24,85,196,0.35);}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(24,85,196,0.5);}
+.btn-outline{background:var(--gray);color:var(--white);}
+.btn-outline:hover{transform:translateY(-3px);background:rgba(59,123,255,0.14);border-color:var(--blue-glow);}
+
+/* ============ SECTION TITLE ============ */
+.section-title{text-align:center;margin:44px 0 22px;}
+.section-title h2{font-size:28px;}
+.section-title p{color:var(--white-dim);font-size:12.5px;margin-top:6px;letter-spacing:1.5px;text-transform:uppercase;}
+
+/* ============ COMPACT DASHBOARD GRID (tab launcher cards) ============ */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px;}
+.dash-card{
+  background:var(--panel);border:1px solid var(--gray-border);border-top:3px solid transparent;
+  border-radius:12px;padding:16px 12px;text-align:center;cursor:pointer;
+  transition:transform .3s var(--ease), box-shadow .3s, border-color .3s;
+}
+.dash-card:hover{transform:translateY(-4px);}
+.dash-card.active{border-top-color:var(--blue-glow);background:rgba(24,85,196,0.12);}
+.dash-icon{font-size:19px;margin-bottom:6px;}
+.dash-label{font-size:12.5px;font-weight:700;color:var(--white);}
+
+@media (max-width:820px){ .dash-grid{grid-template-columns:repeat(4,1fr);} .dash-label{font-size:11px;} }
+@media (max-width:520px){ .dash-grid{grid-template-columns:repeat(3,1fr);} }
+
+/* ============ DASHBOARD CONTENT PANEL ============ */
+.dash-panel{background:var(--panel);border:1px solid var(--gray-border);border-radius:var(--radius);padding:22px;margin-bottom:70px;overflow-x:auto;}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.panel-head h3{font-size:20px;}
+.panel-head .panel-sub{font-size:12px;color:var(--white-dim);text-transform:uppercase;letter-spacing:1px;}
+
+table{width:100%;border-collapse:collapse;min-width:520px;}
+thead th{text-align:left;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--white-dim);padding:9px 10px;border-bottom:1px solid var(--gray-border);}
+tbody td{padding:11px 10px;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.06);color:var(--white-dim);}
+tbody tr:hover{background:rgba(59,123,255,0.05);}
+tbody td.rank{font-family:'Bebas Neue',sans-serif;color:var(--blue-glow);font-size:15px;}
+tbody td.strong-cell{color:#fff;font-weight:700;}
+.badge{display:inline-block;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;padding:2px 9px;border-radius:10px;background:var(--gray);color:var(--white-dim);}
+.badge.live{background:rgba(255,70,70,0.18);color:#ff6b6b;}
+.badge.win{background:rgba(59,180,110,0.18);color:#5cd68a;}
+.badge.loss{background:rgba(255,70,70,0.15);color:#ff8080;}
+.badge.draw{background:rgba(255,255,255,0.1);color:var(--white-dim);}
+
+.empty-note{text-align:center;padding:30px;font-style:italic;color:var(--white-dim);}
+
+/* ============ FOOTER ============ */
+footer{border-top:1px solid var(--gray-border);padding:36px 5% 28px;text-align:center;color:var(--white-dim);font-size:13px;letter-spacing:0.5px;background:rgba(0,0,0,0.5);}
+footer .foot-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--blue-glow);margin-bottom:6px;}
+footer .foot-orn{margin:14px auto;width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--blue-glow),transparent);}
+
+@media (max-width:520px){
+  table{min-width:460px;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="icon-field"></div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="load-logo-wrap" id="load-logo-wrap">
+    <div class="load-logo"><img src="logo.png" alt="EPF logo"></div>
+    <div class="load-abbr">EPF</div>
+  </div>
+  <div class="load-bar-wrap" id="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+</div>
+
+<!-- HEADER -->
+<header id="site-header">
+  <div class="nav-brand">
+    <img src="logo.png" alt="EPF logo">
+    <div class="nav-title">EPF <span>| European Professional Football</span></div>
+  </div>
+  <a class="discord-btn" href="https://discord.gg/Dn62CeCSx" target="_blank">🎮 Join Discord</a>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="hero-logo reveal"><img src="logo.png" alt="EPF logo"></div>
+    <h1 class="reveal">EPF <span class="sep">|</span> European Professional Football</h1>
+    <p class="tagline reveal">The home of competitive football — <b>Fixtures</b>, <b>Results</b>, <b>Teams</b> and full league <b>Stats</b>, all in one place.</p>
+    <div class="hero-buttons reveal">
+      <a class="btn btn-primary" href="https://discord.gg/Dn62CeCSx" target="_blank">🎮 Join Discord</a>
+      <a class="btn btn-outline" onclick="scrollToDash()">📊 View League Hub</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-title reveal" id="hub">
+      <h2>League Hub</h2>
+      <p>Everything about EPF in one compact dashboard</p>
+    </div>
+
+    <div class="dash-grid reveal" id="dash-grid"></div>
+
+    <div class="dash-panel reveal" id="dash-panel"></div>
+  </div>
+</main>
+
+<footer>
+  <div class="foot-brand">EPF — European Professional Football</div>
+  <div class="foot-orn"></div>
+  <div>Fair play · Real competition · Join the community on Discord</div>
+</footer>
+
+<script>
+/* ==================================================================
+   DATA — edit these arrays with real league data.
+   Terminology: use "Team" for clubs and "Player" for athletes everywhere.
+================================================================== */
+const FIXTURES = [
+  { home:"Team Alpha", away:"Team Nova", date:"Aug 22", time:"20:00" },
+  { home:"Team Ridge", away:"Team Vantage", date:"Aug 23", time:"19:30" },
+  { home:"Team Crown", away:"Team Union", date:"Aug 24", time:"21:00" },
+];
+
+const RESULTS = [
+  { home:"Team Alpha", homeScore:2, away:"Team Nova", awayScore:1, date:"Aug 15" },
+  { home:"Team Ridge", homeScore:0, away:"Team Vantage", awayScore:0, date:"Aug 15" },
+  { home:"Team Crown", homeScore:3, away:"Team Union", awayScore:2, date:"Aug 16" },
+];
+
+const TEAMS = [
+  { name:"Team Alpha", founded:"2024", players:18 },
+  { name:"Team Nova",  founded:"2024", players:17 },
+  { name:"Team Ridge", founded:"2025", players:16 },
+  { name:"Team Vantage",founded:"2024", players:19 },
+  { name:"Team Crown", founded:"2025", players:18 },
+  { name:"Team Union", founded:"2024", players:17 },
+];
+
+const TOP_SCORERS = [
+  // { rank:1, player:"Player Name", team:"Team Alpha", goals:9 },
+];
+
+const TOP_ASSISTS = [
+  // { rank:1, player:"Player Name", team:"Team Alpha", assists:6 },
+];
+
+const CLEAN_SHEETS = [
+  // { rank:1, player:"Player Name", team:"Team Alpha", cleanSheets:4 },
+];
+
+const LEAGUE_TABLE = [
+  { pos:1, team:"Team Alpha",  played:5, won:4, drawn:1, lost:0, gf:14, ga:6,  pts:13 },
+  { pos:2, team:"Team Crown",  played:5, won:3, drawn:1, lost:1, gf:12, ga:8,  pts:10 },
+  { pos:3, team:"Team Vantage",played:5, won:3, drawn:0, lost:2, gf:10, ga:9,  pts:9  },
+  { pos:4, team:"Team Ridge",  played:5, won:2, drawn:2, lost:1, gf:9,  ga:7,  pts:8  },
+  { pos:5, team:"Team Nova",   played:5, won:1, drawn:2, lost:2, gf:7,  ga:9,  pts:5  },
+  { pos:6, team:"Team Union",  played:5, won:0, drawn:2, lost:3, gf:5,  ga:14, pts:2  },
+];
+
+/* ================= DASHBOARD TABS ================= */
+const TABS = [
+  { id:"fixtures",  icon:"📅", label:"Fixtures" },
+  { id:"results",   icon:"⚽", label:"Results" },
+  { id:"teams",     icon:"🛡️", label:"List of Teams" },
+  { id:"scorers",   icon:"🥅", label:"Most Goal Scorers" },
+  { id:"assists",   icon:"🎯", label:"Most Assists" },
+  { id:"cleansheets",icon:"🧤", label:"Most Clean Sheets" },
+  { id:"table",     icon:"📊", label:"League Table" },
+];
+
+const dashGrid = document.getElementById('dash-grid');
+const dashPanel = document.getElementById('dash-panel');
+let activeTab = "table";
+
+function renderDashGrid(){
+  dashGrid.innerHTML = TABS.map(t => `
+    <div class="dash-card ${t.id===activeTab?'active':''}" onclick="setTab('${t.id}')">
+      <div class="dash-icon">${t.icon}</div>
+      <div class="dash-label">${t.label}</div>
+    </div>
+  `).join('');
+}
+
+function setTab(id){
+  activeTab = id;
+  renderDashGrid();
+  renderPanel();
+}
+
+function renderPanel(){
+  const tab = TABS.find(t=>t.id===activeTab);
+  let head = `<div class="panel-head"><h3>${tab.icon} ${tab.label}</h3><div class="panel-sub">EPF Season 1</div></div>`;
+  let body = "";
+
+  if(activeTab === "fixtures"){
+    body = FIXTURES.length === 0 ? emptyNote("No upcoming fixtures yet.") : `
+      <table>
+        <thead><tr><th>Home Team</th><th></th><th>Away Team</th><th>Date</th><th>Time</th></tr></thead>
+        <tbody>${FIXTURES.map(f=>`
+          <tr>
+            <td class="strong-cell">${f.home}</td>
+            <td>vs</td>
+            <td class="strong-cell">${f.away}</td>
+            <td>${f.date}</td>
+            <td>${f.time}</td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  if(activeTab === "results"){
+    body = RESULTS.length === 0 ? emptyNote("No results yet.") : `
+      <table>
+        <thead><tr><th>Home Team</th><th>Score</th><th>Away Team</th><th>Date</th></tr></thead>
+        <tbody>${RESULTS.map(r=>`
+          <tr>
+            <td class="strong-cell">${r.home}</td>
+            <td class="strong-cell">${r.homeScore} – ${r.awayScore}</td>
+            <td class="strong-cell">${r.away}</td>
+            <td>${r.date}</td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  if(activeTab === "teams"){
+    body = `
+      <table>
+        <thead><tr><th>Team</th><th>Founded</th><th>Players</th></tr></thead>
+        <tbody>${TEAMS.map(t=>`
+          <tr>
+            <td class="strong-cell">${t.name}</td>
+            <td>${t.founded}</td>
+            <td>${t.players}</td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  if(activeTab === "scorers"){
+    body = TOP_SCORERS.length === 0 ? emptyNote("Goal scoring stats will appear here once the season kicks off.") : `
+      <table>
+        <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Goals</th></tr></thead>
+        <tbody>${TOP_SCORERS.map(p=>`
+          <tr><td class="rank">${p.rank}</td><td class="strong-cell">${p.player}</td><td>${p.team}</td><td>${p.goals}</td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  if(activeTab === "assists"){
+    body = TOP_ASSISTS.length === 0 ? emptyNote("Assist stats will appear here once the season kicks off.") : `
+      <table>
+        <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Assists</th></tr></thead>
+        <tbody>${TOP_ASSISTS.map(p=>`
+          <tr><td class="rank">${p.rank}</td><td class="strong-cell">${p.player}</td><td>${p.team}</td><td>${p.assists}</td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  if(activeTab === "cleansheets"){
+    body = CLEAN_SHEETS.length === 0 ? emptyNote("Clean sheet stats will appear here once the season kicks off.") : `
+      <table>
+        <thead><tr><th>#</th><th>Player</th><th>Team</th><th>Clean Sheets</th></tr></thead>
+        <tbody>${CLEAN_SHEETS.map(p=>`
+          <tr><td class="rank">${p.rank}</td><td class="strong-cell">${p.player}</td><td>${p.team}</td><td>${p.cleanSheets}</td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  if(activeTab === "table"){
+    body = `
+      <table>
+        <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>Pts</th></tr></thead>
+        <tbody>${LEAGUE_TABLE.map(r=>`
+          <tr>
+            <td class="rank">${r.pos}</td>
+            <td class="strong-cell">${r.team}</td>
+            <td>${r.played}</td><td>${r.won}</td><td>${r.drawn}</td><td>${r.lost}</td>
+            <td>${r.gf}</td><td>${r.ga}</td>
+            <td class="strong-cell">${r.pts}</td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  dashPanel.innerHTML = head + body;
+}
+
+function emptyNote(text){ return `<div class="empty-note">${text}</div>`; }
+
+function scrollToDash(){
+  document.getElementById('hub').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+renderDashGrid();
+renderPanel();
+
+/* ================= LOADING SCREEN ================= */
+window.addEventListener('load', () => {
+  requestAnimationFrame(() => { document.getElementById('load-bar').style.width = '100%'; });
+  setTimeout(() => {
+    document.getElementById('load-logo-wrap').classList.add('finish-drop');
+    document.getElementById('load-bar-wrap').classList.add('finish');
+    setTimeout(() => {
+      document.getElementById('loading-screen').classList.add('hide');
+      document.getElementById('site-header').classList.add('show');
+      document.body.classList.add('site-revealed');
+    }, 500);
+  }, 3200);
+});
+
+/* ================= PARTICLE BACKGROUND ================= */
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W,H,particles=[];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+window.addEventListener('resize', resize);
+resize();
+const PCOUNT = Math.min(55, Math.floor(window.innerWidth/22));
+for(let i=0;i<PCOUNT;i++){
+  particles.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+0.5,vx:(Math.random()-0.5)*0.2,vy:(Math.random()-0.5)*0.2});
+}
+function drawParticles(){
+  ctx.clearRect(0,0,W,H);
+  for(const p of particles){
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(120,170,255,0.22)';ctx.fill();
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+/* ================= FLOATING FOOTBALL ICONS ================= */
+const BALL_SVG = `<svg width="46" height="46" viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg"><circle cx="23" cy="23" r="20" fill="none" stroke="white" stroke-width="1.6"/><polygon points="23,13 30,18 27,26 19,26 16,18" fill="none" stroke="white" stroke-width="1.3"/></svg>`;
+const SHIELD_SVG = `<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><path d="M25 4 L44 12 V25 C44 36 36 44 25 48 C14 44 6 36 6 25 V12 Z" fill="none" stroke="white" stroke-width="1.6"/></svg>`;
+const TROPHY_SVG = `<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M15 8h18v12a9 9 0 0 1-18 0V8z" fill="none" stroke="white" stroke-width="1.6"/><line x1="24" y1="29" x2="24" y2="36" stroke="white" stroke-width="1.6"/><line x1="16" y1="42" x2="32" y2="42" stroke="white" stroke-width="1.6"/></svg>`;
+const WHISTLE_SVG = `<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="26" r="9" fill="none" stroke="white" stroke-width="1.5"/><path d="M20 20 L34 9 L34 16 L26 22" fill="none" stroke="white" stroke-width="1.5"/></svg>`;
+
+const field = document.getElementById('icon-field');
+const ICONS = [BALL_SVG, SHIELD_SVG, TROPHY_SVG, WHISTLE_SVG];
+const ICOUNT = Math.min(20, Math.floor(window.innerWidth/60));
+for(let i=0;i<ICOUNT;i++){
+  const el = document.createElement('div');
+  el.className='float-icon';
+  el.innerHTML = ICONS[i % ICONS.length];
+  const size = 38 + Math.random()*54;
+  el.style.width = size+'px';
+  el.style.height = size+'px';
+  el.style.left = Math.random()*100+'%';
+  el.style.top = Math.random()*100+'%';
+  el.style.opacity = (0.08 + Math.random()*0.12).toFixed(2);
+  el.style.filter = 'blur(1px)';
+  el.style.animationDuration = (14 + Math.random()*14)+'s';
+  el.style.animationDelay = (Math.random()*-20)+'s';
+  field.appendChild(el);
+}
+</script>
+</body>
+</html>
